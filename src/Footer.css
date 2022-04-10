@@ -1,0 +1,12 @@
+.Footer {
+  display: block;
+  text-align: left;
+  background-color: #f60;
+  padding: 8px;
+  color: black;
+}
+
+.FooterClick {
+  color: inherit;
+  color: -webkit-link;
+}

@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 import { Button } from './Button';
 import { useDownload } from './useDownload';
+import { Footer } from './Footer';
 
 function App() {
   const { count, isLoading, downloadAll } = useDownload();
@@ -22,6 +23,7 @@ function App() {
         </Button>
         <p>{count} Documents found</p>
       </header>
+      <Footer />
     </div>
   );
 }
