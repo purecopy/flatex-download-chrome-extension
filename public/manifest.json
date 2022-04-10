@@ -1,6 +1,6 @@
 {
   "name": "Flatex Downloader",
-  "description": "Simple Batch Downloader for your Flatex Documents.",
+  "description": "Simple Community Batch Downloader for your Flatex Documents.",
   "version": "1.0",
   "manifest_version": 3,
   "icons": {
