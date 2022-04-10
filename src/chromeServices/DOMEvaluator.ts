@@ -21,13 +21,17 @@ const handleMessages = (
       const data = getFormData();
 
       getCredentials()
-        .then((creds) => {
-          return asyncMapSerial(docs, async (doc) => {
-            const link = await getDocumentLink(data, doc, { creds });
-            await download(link);
-            return link;
-          });
-        })
+        .then((creds) =>
+          asyncMapSerial(
+            docs,
+            async (doc) => {
+              const link = await getDocumentLink(data, doc, { creds });
+              await download(link);
+              return link;
+            },
+            true,
+          ),
+        )
         .then((links) => {
           sendResponse({ success: true, count: links.length });
         })

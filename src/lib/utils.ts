@@ -2,7 +2,7 @@ import { DOWNLOAD_OFFSET_MS } from '../constants';
 
 export function sleep(ms: number): Promise<void> {
   return new Promise((res) => {
-    window.setTimeout(res, ms);
+    setTimeout(res, ms);
   });
 }
 
@@ -49,15 +49,33 @@ export async function download(url: string): Promise<void> {
   }
 }
 
-export function asyncMapSerial<T, U>(arr: T[], fn: (item: T, index: number) => Promise<U>): Promise<U[]> {
+export async function asyncMapSerial<T, U>(
+  arr: T[],
+  fn: (item: T, index: number) => Promise<U>,
+  retry?: boolean,
+): Promise<U[]> {
   return arr.reduce(async (res, cur, index) => {
     const prev = await res;
+    const maxRetry = 3;
+    let retryCount = 0;
 
-    try {
-      const val = await fn(cur, index);
-      return [...prev, val];
-    } catch (e) {}
+    async function execute(): Promise<U[]> {
+      try {
+        const value = await fn(cur, index);
+        return [...prev, value];
+      } catch (e) {
+        console.error(e);
 
-    return prev;
+        if (retry && retryCount < maxRetry) {
+          await sleep(1000);
+          retryCount += 1;
+          return execute();
+        }
+      }
+
+      return prev;
+    }
+
+    return execute();
   }, Promise.resolve([] as U[]));
 }
