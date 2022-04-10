@@ -12,5 +12,8 @@
   "action": {
     "default_popup": "index.html",
     "default_title": "Open the popup"
-  }
+  },
+  "permissions": [
+    "activeTab"
+  ]
 }
