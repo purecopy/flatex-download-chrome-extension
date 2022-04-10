@@ -1,6 +1,6 @@
 {
-  "name": "Flatex Downloader",
-  "description": "Simple Community Batch Downloader for your Flatex Documents.",
+  "name": "Flatex Downloader (Community Edition)",
+  "description": "Simple Batch Downloader for your Flatex Documents",
   "version": "1.0",
   "manifest_version": 3,
   "icons": {
@@ -11,9 +11,15 @@
   },
   "action": {
     "default_popup": "index.html",
-    "default_title": "Open the popup"
+    "default_title": "Open the downloader"
   },
   "permissions": [
     "activeTab"
-  ]
+  ],
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["./static/js/content.js"]
+    }
+  ]  
 }
