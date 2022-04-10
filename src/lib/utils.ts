@@ -64,7 +64,7 @@ export async function asyncMapSerial<T, U>(
         const value = await fn(cur, index);
         return [...prev, value];
       } catch (e) {
-        console.error(e);
+        console.warn(e);
 
         if (retry && retryCount < maxRetry) {
           await sleep(1000);
