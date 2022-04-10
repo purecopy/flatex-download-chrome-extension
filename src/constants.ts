@@ -14,4 +14,4 @@ export const TOKEN_ID_PATTERN =
 
 export const WINDOW_ID_PATTERN = /setCurrentWindowId\(.*"(.*)"\);/g;
 
-export const DOWNLOAD_OFFSET_MS = 3000;
+export const DOWNLOAD_OFFSET_MS = 800;
