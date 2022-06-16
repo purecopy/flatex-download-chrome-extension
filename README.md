@@ -5,6 +5,18 @@
 > Simple Batch Downloader for your Flatex Documents.
 > Download all your Documents in one go.
 
+## Table of Contents
+
+- [Intro](#intro)
+- [Installation](#installation)
+  - [Chrome Webstore](#chrome-webstore)
+  - [Manual](#manual)
+- [Usage](#usage)
+- [Privacy](#privacy)
+- [Todo](#todo)
+
+## Intro
+
 We all love Flatex, but it is missing a crucial key feature: Batch downloading your Flatex Mailings.
 
 ## Installation
