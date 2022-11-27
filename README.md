@@ -12,6 +12,7 @@
   - [Chrome Webstore](#chrome-webstore)
   - [Manual](#manual)
 - [Usage](#usage)
+- [Build](#build-from-source)
 - [Privacy](#privacy)
 - [Todo](#todo)
 
@@ -27,35 +28,40 @@ Download [here](https://chrome.google.com/webstore/detail/flatex-downloader-comm
 
 ### Manual
 
-1. Clone the repo
+1. Download & unpack [extension.zip](https://github.com/purecopy/flatex-download-chrome-extension/releases/download/v1.0.2/extension.zip) from the latest release file.
 
-```bash
-git@github.com:purecopy/flatex-download-chrome-extension.git
-```
-
-2. Install dependencies
-
-```bash
-npm install
-```
-
-3. Build the extension
-
-```bash
-npm run build
-```
-
-4. Add the extension to Chrome
-
-```
-Manage Extensions --> Activate "Developer Mode" --> Click "Load unpacked"
-```
+2. Install extension
+   ```
+   Manage Extensions --> Activate "Developer Mode" --> Click "Load unpacked" --> select "build" folder
+   ```
 
 ## Usage
 
 1. Go to the Document Archive
 2. Select preferred filters
 3. Click "Download" in the Extension
+
+## Build from source
+
+1. Clone the repo
+
+   ```bash
+   git@github.com:purecopy/flatex-download-chrome-extension.git
+   ```
+
+2. Install dependencies
+
+   ```bash
+   npm install
+   ```
+
+3. Build the extension
+
+   ```bash
+   npm run build
+   ```
+
+4. Add the extension to Chrome
 
 ## Privacy
 
