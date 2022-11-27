@@ -7,7 +7,11 @@ export const SELECTOR = {
   READ_STATE_SELECT: '#documentArchiveListForm_readState',
 };
 
-export const COMMAND_PATTERN = /finished\("(.*)",/g;
+export const COMMAND_PATTERN = {
+  v1: /finished\("(.*)",/g,
+  // changed by Flatex on 2022-11-27
+  v2: /display\("(.*)",/g,
+};
 
 export const TOKEN_ID_PATTERN =
   /setTokenId\(.*"([0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12})"\);/g;

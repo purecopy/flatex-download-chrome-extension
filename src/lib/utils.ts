@@ -79,3 +79,21 @@ export async function asyncMapSerial<T, U>(
     return execute();
   }, Promise.resolve([] as U[]));
 }
+
+/**
+ * Match input string with provided regex and return capture groups.
+ */
+export function getVersionedMatch(input: string, versionedPattern: Record<string, RegExp>): string[] | null {
+  const patterns = Object.values(versionedPattern);
+
+  for (let index = 0; index < patterns.length; index++) {
+    const pattern = patterns[index];
+    const matches = Array.from(input.matchAll(pattern));
+
+    if (matches.length > 0) {
+      return matches.map((match) => match[1]);
+    }
+  }
+
+  return null;
+}

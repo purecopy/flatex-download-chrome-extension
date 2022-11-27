@@ -1,5 +1,5 @@
 import { COMMAND_PATTERN, SELECTOR, TOKEN_ID_PATTERN, WINDOW_ID_PATTERN } from '../constants';
-import { getCurrentDay, getCurrentMonth, getCurrentYear, padDate, getNodeIndex } from './utils';
+import { getCurrentDay, getCurrentMonth, getCurrentYear, padDate, getNodeIndex, getVersionedMatch } from './utils';
 
 export type Command = {
   command: string;
@@ -95,11 +95,14 @@ export async function getDocumentLink(formData: FormData, row: Element, options:
 
   const executeCmd = data.commands.find((cmd) => cmd.command === 'execute');
 
+  // FIXME: detect & gracefully handle intermediate waiting state
+
   if (!executeCmd?.script) {
     throw Error('command-missing');
   }
 
-  const link = [...executeCmd.script.matchAll(COMMAND_PATTERN)][0]?.[1];
+  // first capture group contains the pdf link
+  const link = getVersionedMatch(executeCmd.script, COMMAND_PATTERN)?.[0];
 
   if (!link) {
     throw Error('command-invalid');
