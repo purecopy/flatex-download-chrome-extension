@@ -20,6 +20,8 @@ const handleMessages = (
       const docs = getDocumentRows();
       const data = getFormData();
 
+      // TODO: Improve error handling
+      // - Display failed downloads
       getCredentials()
         .then((creds) =>
           asyncMapSerial(
