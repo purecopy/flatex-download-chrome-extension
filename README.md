@@ -69,4 +69,4 @@ Because it adds functionality to the normal browser context, Flatex Downloader r
 
 ## Todo
 
-- [ ] Flatex DE Support
+- [X] Flatex DE Support
