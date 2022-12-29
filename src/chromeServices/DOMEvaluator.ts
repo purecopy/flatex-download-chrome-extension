@@ -28,7 +28,14 @@ const handleMessages = (
             docs,
             async (doc) => {
               const link = await getDocumentLink(data, doc, { creds });
-              await download(link);
+			
+			              // get file date from table
+              const elements: Element[] = Array.from(doc.getElementsByClassName("C2"));
+              let collection = elements[0];
+              let datetext = (collection as HTMLElement).innerText;
+              let dateFormated = datetext.replace(/(.*)\.(.*)\.(.*)/, '$3$2$1') + '_'; //convert to YYYYMMDD
+
+              await download(link, dateFormated);		  
               return link;
             },
             true,

@@ -26,20 +26,25 @@ export function getNodeIndex(child: Element): number {
   return Array.prototype.indexOf.call(child.parentNode?.children || [], child);
 }
 
-export function getName(url: string): string {
+export function getName(url: string, date: string): string {
   const lastTrailing = url.lastIndexOf('/');
-  const name = url.slice(lastTrailing + 1);
+  const name = decodeURI(url.slice(lastTrailing + 1)); // remove url codes
 
   if (!name.endsWith('.pdf')) {
     return `unnamed.pdf`;
   }
 
+  //if name has no date (should start with year 20xx) then use date from table row
+  if (!name.startsWith('20')) {
+    return date + name;
+  }
+
   return name;
 }
 
-export async function download(url: string): Promise<void> {
+export async function download(url: string, date: string): Promise<void> {
   const a = document.createElement('a');
-  const name = getName(url);
+  const name = getName(url, date);
   a.href = url;
   a.download = name;
   a.click();
