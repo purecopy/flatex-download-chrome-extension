@@ -12,6 +12,7 @@ export type Command = {
 export type Credentials = {
   tokenId: string;
   windowId: string;
+//  url: string;
 };
 
 export function getDocumentRows(): Element[] {
@@ -19,7 +20,9 @@ export function getDocumentRows(): Element[] {
 }
 
 export async function getCredentials(): Promise<Credentials> {
-  const res = await fetch('https://konto.flatex.at/banking-flatex.at/documentArchiveListFormAction.do');
+//  const url = await getUrl();
+//  const res = await fetch(url);
+  const res = await fetch('https://konto.flatex.de/banking-flatex/documentArchiveListFormAction.do');
   const html = await res.text();
 
   const tokenId = [...html.matchAll(TOKEN_ID_PATTERN)][0]?.[1].replaceAll('\\', '');
@@ -32,7 +35,25 @@ export async function getCredentials(): Promise<Credentials> {
   return {
     tokenId,
     windowId,
+//    url
   };
+}
+
+async function getUrl(): Promise<string> {
+  return new Promise((resolve) => {
+    chrome.tabs?.query(
+      {
+        active: true,
+        currentWindow: true,
+      },
+      (tabs) => {
+        if ( tabs[0].url?.endsWith('documentArchiveListFormAction.do') ) {
+          resolve( tabs[0].url );
+        } //Fallback
+        else resolve( 'https://konto.flatex.at/banking-flatex.at/documentArchiveListFormAction.do' );
+      },
+    );		
+  });
 }
 
 function createFormData(
@@ -80,8 +101,9 @@ export async function getDocumentLink(formData: FormData, row: Element, options:
   const index = getNodeIndex(row);
 
   formData.set('documentArchiveListTable.selectedrowidx', String(index));
-
-  const res = await fetch('https://konto.flatex.at/banking-flatex.at/documentArchiveListFormAction.do', {
+//  const url = await getUrl();
+//  const res = await fetch(url, {
+	  const res = await fetch('https://konto.flatex.de/banking-flatex/documentArchiveListFormAction.do', {
     method: 'POST',
     headers: {
       'x-ajax': 'true',
