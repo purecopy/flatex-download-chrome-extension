@@ -22,7 +22,7 @@ const handleMessages = (
 
       // TODO: Improve error handling
       // - Display failed downloads
-      getCredentials()
+      getCredentials(msg.message)
         .then((creds) =>
           asyncMapSerial(
             docs,

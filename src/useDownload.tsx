@@ -5,6 +5,7 @@ export function useDownload() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [count, setCount] = React.useState(0);
   const [tabId, setTabId] = React.useState(0);
+  const [url, setUrl] = React.useState('https://konto.flatex.at/banking-flatex.at/documentArchiveListFormAction.do');
 
   async function downloadAll(): Promise<{ success: boolean; count?: number }> {
     if (!tabId) {
@@ -14,7 +15,7 @@ export function useDownload() {
     setIsLoading(true);
 
     return new Promise((res, rej) => {
-      chrome.tabs?.sendMessage(tabId, { type: 'POST_DOWNLOAD' } as DOMMessage, (response: DOMMessageResponse) => {
+      chrome.tabs?.sendMessage(tabId, { type: 'POST_DOWNLOAD', message: url} as DOMMessage, (response: DOMMessageResponse) => {
         setIsLoading(false);
 
         if ('success' in response && response.success === true) {
@@ -36,7 +37,7 @@ export function useDownload() {
       return;
     }
 
-    chrome.tabs?.sendMessage(tabId, { type: 'GET_DOCUMENTS' } as DOMMessage, (response: DOMMessageResponse) => {
+    chrome.tabs?.sendMessage(tabId, { type: 'GET_DOCUMENTS', message: url} as DOMMessage, (response: DOMMessageResponse) => {
       if ('documents' in response) {
         setCount(response.documents);
       }
@@ -53,6 +54,8 @@ export function useDownload() {
       (tabs) => {
         const tabId = tabs[0].id || 0;
         setTabId(tabId);
+		const url = tabs[0].url?.endsWith('documentArchiveListFormAction.do') ? tabs[0].url : 'https://konto.flatex.at/banking-flatex.at/documentArchiveListFormAction.do' ;
+        setUrl(url);
       },
     );
   });
