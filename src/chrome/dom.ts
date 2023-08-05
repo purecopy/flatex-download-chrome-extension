@@ -4,7 +4,7 @@ import { DOMMessage, DOMMessageResponse } from '../types';
 
 const handleMessages = (
   msg: DOMMessage,
-  sender: chrome.runtime.MessageSender,
+  _sender: chrome.runtime.MessageSender,
   sendResponse: (response: DOMMessageResponse) => void,
 ) => {
   let response: DOMMessageResponse | undefined = undefined;

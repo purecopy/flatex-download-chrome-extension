@@ -11,15 +11,13 @@
   },
   "action": {
     "default_popup": "index.html",
-    "default_title": "Open the downloader"
+    "default_title": "Open Flatex Downloader"
   },
-  "permissions": [
-    "activeTab"
-  ],
+  "permissions": ["activeTab"],
   "content_scripts": [
     {
       "matches": ["https://konto.flatex.at/*", "https://konto.flatex.de/*"],
-      "js": ["./static/js/content.js"]
+      "js": ["./src/chrome/dom.ts"]
     }
-  ]  
+  ]
 }
