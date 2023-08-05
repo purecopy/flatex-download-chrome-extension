@@ -1,5 +1,5 @@
 import logo from './logo.svg';
-import './App.css';
+import './app.css';
 import { Button } from './button';
 import { useDownload } from './use-download';
 import { Footer } from './footer';
