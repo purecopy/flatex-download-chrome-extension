@@ -1,10 +1,10 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
 import { DOMMessage, DOMMessageResponse } from './types';
 
 export function useDownload() {
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [count, setCount] = React.useState(0);
-  const [tabId, setTabId] = React.useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [count, setCount] = useState(0);
+  const [tabId, setTabId] = useState(0);
 
   async function downloadAll(): Promise<{ success: boolean; count?: number }> {
     if (!tabId) {
@@ -31,7 +31,7 @@ export function useDownload() {
   }
 
   // get count
-  React.useEffect(() => {
+  useEffect(() => {
     if (!tabId) {
       return;
     }
@@ -44,7 +44,7 @@ export function useDownload() {
   });
 
   // get tab
-  React.useEffect(() => {
+  useEffect(() => {
     chrome.tabs?.query(
       {
         active: true,
