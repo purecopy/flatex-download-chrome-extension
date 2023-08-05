@@ -1,8 +1,8 @@
 import logo from './logo.svg';
 import './App.css';
-import { Button } from './Button';
-import { useDownload } from './useDownload';
-import { Footer } from './Footer';
+import { Button } from './button';
+import { useDownload } from './use-download';
+import { Footer } from './footer';
 
 function App() {
   const { count, isLoading, downloadAll } = useDownload();
