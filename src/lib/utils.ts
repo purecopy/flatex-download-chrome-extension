@@ -97,3 +97,11 @@ export function getVersionedMatch(input: string, versionedPattern: Record<string
 
   return null;
 }
+
+export function runExternalScript(url: string): void {
+  const script = document.createElement('script');
+  script.setAttribute('type', 'module');
+  script.setAttribute('src', url);
+  document.body.appendChild(script);
+  script.remove();
+}

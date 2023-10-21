@@ -13,9 +13,6 @@ export const COMMAND_PATTERN = {
   v2: /display\("(.*)",/g,
 };
 
-export const TOKEN_ID_PATTERN =
-  /setTokenId\(.*"([0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12})"\);/g;
-
-export const WINDOW_ID_PATTERN = /setCurrentWindowId\(.*"(.*)"\);/g;
-
 export const DOWNLOAD_OFFSET_MS = 800;
+
+export const AUTH_EVENT = 'flatex-download-chrome-extension/auth';

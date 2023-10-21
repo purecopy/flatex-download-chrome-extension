@@ -1,6 +1,21 @@
-import { getCredentials, getDocumentLink, getDocumentRows, getFormData } from '../lib/flatex';
+import { Credentials, getCredentials, getDocumentLink, getDocumentRows, getFormData } from '../lib/flatex';
 import { asyncMapSerial, download } from '../lib/utils';
 import { DOMMessage, DOMMessageResponse } from '../types';
+
+function getCredentialsWithCacheFn() {
+  let credentials: Credentials | null = null;
+
+  return async () => {
+    if (credentials) {
+      return credentials;
+    }
+
+    credentials = await getCredentials();
+    return credentials;
+  };
+}
+
+const getCredentialsWithCache = getCredentialsWithCacheFn();
 
 const handleMessages = (
   msg: DOMMessage,
@@ -22,12 +37,12 @@ const handleMessages = (
 
       // TODO: Improve error handling
       // - Display failed downloads
-      getCredentials()
-        .then((creds) =>
+      getCredentialsWithCache()
+        .then((credentials) =>
           asyncMapSerial(
             docs,
             async (doc) => {
-              const link = await getDocumentLink(data, doc, { creds });
+              const link = await getDocumentLink(data, doc, { credentials });
               await download(link);
               return link;
             },

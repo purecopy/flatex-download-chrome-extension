@@ -1,5 +1,16 @@
-import { COMMAND_PATTERN, SELECTOR, TOKEN_ID_PATTERN, WINDOW_ID_PATTERN } from '../constants';
-import { getCurrentDay, getCurrentMonth, getCurrentYear, padDate, getNodeIndex, getVersionedMatch } from './utils';
+import { AUTH_EVENT, COMMAND_PATTERN, SELECTOR } from '../constants';
+import {
+  getCurrentDay,
+  getCurrentMonth,
+  getCurrentYear,
+  padDate,
+  getNodeIndex,
+  getVersionedMatch,
+  runExternalScript,
+} from './utils';
+import type { AuthEventPayload } from '../chrome/auth';
+// @ts-expect-error
+import auth from '../chrome/auth?script&module';
 
 export type Command = {
   command: string;
@@ -18,21 +29,17 @@ export function getDocumentRows(): Element[] {
   return [...Array.from(document.querySelectorAll('tr[data-wt-click="dokument_download"]'))];
 }
 
-export async function getCredentials(): Promise<Credentials> {
-  const res = await fetch('https://konto.flatex.at/banking-flatex.at/documentArchiveListFormAction.do');
-  const html = await res.text();
+export function getCredentials(): Promise<Credentials> {
+  return new Promise((res) => {
+    function handleSetup(event: CustomEvent<AuthEventPayload>) {
+      res(event.detail.credentials);
+    }
 
-  const tokenId = [...html.matchAll(TOKEN_ID_PATTERN)][0]?.[1].replaceAll('\\', '');
-  const windowId = [...html.matchAll(WINDOW_ID_PATTERN)][0]?.[1]?.replaceAll('\\', '');
+    (document as any).addEventListener(AUTH_EVENT, handleSetup, { once: true });
 
-  if (!tokenId || !windowId) {
-    throw Error('credentials-missing');
-  }
-
-  return {
-    tokenId,
-    windowId,
-  };
+    const url = chrome.runtime.getURL(auth);
+    runExternalScript(url);
+  });
 }
 
 function createFormData(
@@ -76,7 +83,7 @@ export function getFormData() {
   return formData;
 }
 
-export async function getDocumentLink(formData: FormData, row: Element, options: { creds: Credentials }) {
+export async function getDocumentLink(formData: FormData, row: Element, options: { credentials: Credentials }) {
   const index = getNodeIndex(row);
 
   formData.set('documentArchiveListTable.selectedrowidx', String(index));
@@ -86,8 +93,8 @@ export async function getDocumentLink(formData: FormData, row: Element, options:
     headers: {
       'x-ajax': 'true',
       'x-requested-with': 'XMLHttpRequest',
-      'x-tokenid': options.creds.tokenId,
-      'x-windowid': options.creds.windowId,
+      'x-tokenid': options.credentials.tokenId,
+      'x-windowid': options.credentials.windowId,
     },
     body: formData,
   });
