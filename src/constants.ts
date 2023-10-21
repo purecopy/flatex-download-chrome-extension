@@ -13,6 +13,4 @@ export const COMMAND_PATTERN = {
   v2: /display\("(.*)",/g,
 };
 
-export const DOWNLOAD_OFFSET_MS = 800;
-
 export const AUTH_EVENT = 'flatex-download-chrome-extension/auth';

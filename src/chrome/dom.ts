@@ -1,6 +1,8 @@
+import JSZip from 'jszip';
 import { Credentials, getCredentials, getDocumentLink, getDocumentRows, getFormData } from '../lib/flatex';
-import { asyncMapSerial, download } from '../lib/utils';
+import { getPdf } from '../lib/utils';
 import { DOMMessage, DOMMessageResponse } from '../types';
+import { saveAs } from 'file-saver';
 
 function getCredentialsWithCacheFn() {
   let credentials: Credentials | null = null;
@@ -32,27 +34,30 @@ const handleMessages = (
 
       break;
     case 'POST_DOWNLOAD':
-      const docs = getDocumentRows();
+      const docRows = getDocumentRows();
       const data = getFormData();
 
       // TODO: Improve error handling
       // - Display failed downloads
       getCredentialsWithCache()
-        .then((credentials) =>
-          asyncMapSerial(
-            docs,
-            async (doc) => {
-              const link = await getDocumentLink(data, doc, { credentials });
-              await download(link);
-              return link;
-            },
-            true,
-          ),
-        )
-        .then((links) => {
-          sendResponse({ success: true, count: links.length });
+        .then((credentials) => Promise.all(docRows.map((row) => getDocumentLink(data, row, { credentials }))))
+        .then((docLinks) => Promise.all(docLinks.map((link) => getPdf(link))))
+        .then((pdfs) => {
+          const zip = new JSZip();
+
+          pdfs.forEach((pdf) => {
+            zip.file(pdf.name, pdf.data);
+          });
+
+          return zip;
+        })
+        .then((zip) => zip.generateAsync({ type: 'blob' }))
+        .then((blob) => saveAs(blob, `flatex-downloader-export.zip`))
+        .then((_links) => {
+          sendResponse({ success: true, count: docRows.length });
         })
         .catch((error) => {
+          console.log(error);
           sendResponse({ success: false, count: 0, reason: error.message });
         });
 

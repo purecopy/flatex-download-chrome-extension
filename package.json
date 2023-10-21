@@ -16,6 +16,8 @@
     "@types/node": "^20.4.8",
     "@types/react": "^18.2.18",
     "@types/react-dom": "^18.2.7",
+    "file-saver": "^2.0.5",
+    "jszip": "^3.9.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "web-vitals": "^3.4.0"
@@ -23,6 +25,7 @@
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0-beta.18",
     "@types/chrome": "^0.0.243",
+    "@types/file-saver": "^2.0.6",
     "@vitejs/plugin-react": "^4.0.4",
     "typescript": "^5.1.6",
     "vite": "^4.4.8"

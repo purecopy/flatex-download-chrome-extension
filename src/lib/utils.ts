@@ -1,5 +1,3 @@
-import { DOWNLOAD_OFFSET_MS } from '../constants';
-
 export function sleep(ms: number): Promise<void> {
   return new Promise((res) => {
     setTimeout(res, ms);
@@ -37,49 +35,6 @@ export function getName(url: string): string {
   return name;
 }
 
-export async function download(url: string): Promise<void> {
-  const a = document.createElement('a');
-  const name = getName(url);
-  a.href = url;
-  a.download = name;
-  a.click();
-
-  if (DOWNLOAD_OFFSET_MS) {
-    await sleep(DOWNLOAD_OFFSET_MS);
-  }
-}
-
-export async function asyncMapSerial<T, U>(
-  arr: T[],
-  fn: (item: T, index: number) => Promise<U>,
-  retry?: boolean,
-): Promise<U[]> {
-  return arr.reduce(async (res, cur, index) => {
-    const prev = await res;
-    const maxRetry = 3;
-    let retryCount = 0;
-
-    async function execute(): Promise<U[]> {
-      try {
-        const value = await fn(cur, index);
-        return [...prev, value];
-      } catch (e) {
-        console.warn(e);
-
-        if (retry && retryCount < maxRetry) {
-          await sleep(1000);
-          retryCount += 1;
-          return execute();
-        }
-      }
-
-      return prev;
-    }
-
-    return execute();
-  }, Promise.resolve([] as U[]));
-}
-
 /**
  * Match input string with provided regex and return capture groups.
  */
@@ -104,4 +59,18 @@ export function runExternalScript(url: string): void {
   script.setAttribute('src', url);
   document.body.appendChild(script);
   script.remove();
+}
+
+export async function getPdf(url: string): Promise<{
+  data: Blob;
+  url: string;
+  name: string;
+}> {
+  const res = await fetch(url);
+
+  return {
+    url,
+    data: await res.blob(),
+    name: getName(url),
+  };
 }
