@@ -17,7 +17,8 @@
   "content_scripts": [
     {
       "matches": ["https://konto.flatex.at/*", "https://konto.flatex.de/*"],
-      "js": ["./src/chrome/dom.ts"]
+      "js": ["./src/chrome/dom.ts"],
+      "run_at": "document_end"
     }
   ]
 }
