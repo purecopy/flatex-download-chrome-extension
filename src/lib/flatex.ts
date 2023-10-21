@@ -88,7 +88,7 @@ export async function getDocumentLink(formData: FormData, row: Element, options:
 
   formData.set('documentArchiveListTable.selectedrowidx', String(index));
 
-  const res = await fetch('https://konto.flatex.at/banking-flatex.at/documentArchiveListFormAction.do', {
+  const res = await fetch('', {
     method: 'POST',
     headers: {
       'x-ajax': 'true',
