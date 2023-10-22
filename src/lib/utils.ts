@@ -1,9 +1,18 @@
-import { DOWNLOAD_OFFSET_MS } from '../constants';
+import JSZip from 'jszip';
+import { PdfFile } from '../types';
 
 export function sleep(ms: number): Promise<void> {
   return new Promise((res) => {
     setTimeout(res, ms);
   });
+}
+
+export async function asyncMapSerial<T, U>(arr: T[], fn: (item: T, index: number) => Promise<U>): Promise<U[]> {
+  return arr.reduce(async (res, cur, index) => {
+    const prev = await res;
+    const value = await fn(cur, index);
+    return [...prev, value];
+  }, Promise.resolve([] as U[]));
 }
 
 export function getCurrentYear(): number {
@@ -37,49 +46,6 @@ export function getName(url: string): string {
   return name;
 }
 
-export async function download(url: string): Promise<void> {
-  const a = document.createElement('a');
-  const name = getName(url);
-  a.href = url;
-  a.download = name;
-  a.click();
-
-  if (DOWNLOAD_OFFSET_MS) {
-    await sleep(DOWNLOAD_OFFSET_MS);
-  }
-}
-
-export async function asyncMapSerial<T, U>(
-  arr: T[],
-  fn: (item: T, index: number) => Promise<U>,
-  retry?: boolean,
-): Promise<U[]> {
-  return arr.reduce(async (res, cur, index) => {
-    const prev = await res;
-    const maxRetry = 3;
-    let retryCount = 0;
-
-    async function execute(): Promise<U[]> {
-      try {
-        const value = await fn(cur, index);
-        return [...prev, value];
-      } catch (e) {
-        console.warn(e);
-
-        if (retry && retryCount < maxRetry) {
-          await sleep(1000);
-          retryCount += 1;
-          return execute();
-        }
-      }
-
-      return prev;
-    }
-
-    return execute();
-  }, Promise.resolve([] as U[]));
-}
-
 /**
  * Match input string with provided regex and return capture groups.
  */
@@ -104,4 +70,41 @@ export function runExternalScript(url: string): void {
   script.setAttribute('src', url);
   document.body.appendChild(script);
   script.remove();
+}
+
+export async function getPdf(url: string): Promise<PdfFile> {
+  const res = await fetch(url);
+
+  if (!res.ok) {
+    throw res;
+  }
+
+  return {
+    url,
+    data: await res.blob(),
+    name: getName(url),
+  };
+}
+
+export function createZip(pdfs: PdfFile[]): Promise<Blob> {
+  const zip = new JSZip();
+
+  pdfs.forEach((pdf) => {
+    zip.file(pdf.name, pdf.data);
+  });
+
+  return zip.generateAsync({ type: 'blob' });
+}
+
+export async function withRetry<T>(fn: () => Promise<T>, retries = 3, retryOffset = 5000): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries > 0) {
+      await sleep(retryOffset);
+      return await withRetry(fn, retries - 1);
+    }
+
+    throw error;
+  }
 }
