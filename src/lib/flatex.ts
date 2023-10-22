@@ -106,6 +106,7 @@ export async function getDocumentLink(formData: FormData, row: Element, options:
   // FIXME: detect & gracefully handle intermediate waiting state
 
   if (!executeCmd?.script) {
+    console.error('invalid command', { formData, row, options, command: executeCmd });
     throw Error('command-missing');
   }
 
