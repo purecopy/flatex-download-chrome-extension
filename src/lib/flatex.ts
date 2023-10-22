@@ -7,6 +7,7 @@ import {
   getNodeIndex,
   getVersionedMatch,
   runExternalScript,
+  sleep,
 } from './utils';
 import type { AuthEventPayload } from '../chrome/auth';
 // @ts-expect-error
@@ -116,4 +117,25 @@ export async function getDocumentLink(formData: FormData, row: Element, options:
   }
 
   return link;
+}
+
+export async function verifyPdfLink(link: string) {
+  const verificationFrame = document.createElement('iframe');
+
+  const loaded = new Promise((res, rej) => {
+    verificationFrame.addEventListener('load', res);
+    window.setTimeout(rej, 30_000);
+  });
+
+  verificationFrame.setAttribute('src', link);
+  verificationFrame.style.setProperty('visibility', 'hidden');
+  verificationFrame.style.setProperty('opacity', '0');
+  verificationFrame.style.setProperty('width', '0');
+  verificationFrame.style.setProperty('height', '0');
+
+  document.body.appendChild(verificationFrame);
+
+  await loaded;
+  // wait some random time to for JS to execute
+  await sleep(5000);
 }

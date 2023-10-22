@@ -1,6 +1,12 @@
-import JSZip from 'jszip';
-import { Credentials, getCredentials, getDocumentLink, getDocumentRows, getFormData } from '../lib/flatex';
-import { getPdf } from '../lib/utils';
+import {
+  Credentials,
+  getCredentials,
+  getDocumentLink,
+  getDocumentRows,
+  getFormData,
+  verifyPdfLink,
+} from '../lib/flatex';
+import { asyncMapSerial, createZip, getPdf, withRetry } from '../lib/utils';
 import { DOMMessage, DOMMessageResponse } from '../types';
 import { saveAs } from 'file-saver';
 
@@ -34,27 +40,33 @@ const handleMessages = (
 
       break;
     case 'POST_DOWNLOAD':
-      const docRows = getDocumentRows();
+      const rows = getDocumentRows();
       const data = getFormData();
 
       // TODO: Improve error handling
       // - Display failed downloads
       getCredentialsWithCache()
-        .then((credentials) => Promise.all(docRows.map((row) => getDocumentLink(data, row, { credentials }))))
-        .then((docLinks) => Promise.all(docLinks.map((link) => getPdf(link))))
-        .then((pdfs) => {
-          const zip = new JSZip();
+        .then((credentials) =>
+          asyncMapSerial(rows, (row) => withRetry(() => getDocumentLink(data, row, { credentials }))),
+        )
+        .then((docLinks) =>
+          asyncMapSerial(docLinks, async (docLink) => {
+            try {
+              return await getPdf(docLink);
+            } catch (error) {
+              if (error instanceof Response && error.status === 503) {
+                await verifyPdfLink(docLink);
+                return await getPdf(docLink);
+              }
 
-          pdfs.forEach((pdf) => {
-            zip.file(pdf.name, pdf.data);
-          });
-
-          return zip;
-        })
-        .then((zip) => zip.generateAsync({ type: 'blob' }))
+              throw error;
+            }
+          }),
+        )
+        .then((pdfs) => createZip(pdfs))
         .then((blob) => saveAs(blob, `flatex-downloader-export.zip`))
         .then((_links) => {
-          sendResponse({ success: true, count: docRows.length });
+          sendResponse({ success: true, count: rows.length });
         })
         .catch((error) => {
           console.log(error);
