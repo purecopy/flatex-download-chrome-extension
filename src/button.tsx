@@ -1,4 +1,4 @@
-import './Button.css';
+import './button.css';
 
 type ButtonProps = {
   loading?: boolean;
