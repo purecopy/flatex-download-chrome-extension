@@ -1,4 +1,4 @@
-import './Footer.css';
+import './footer.css';
 
 export function Footer(): JSX.Element {
   return (

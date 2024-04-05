@@ -1,4 +1,4 @@
-import JSZip from 'jszip';
+import * as zip from '@zip.js/zip.js';
 import { PdfFile } from '../types';
 
 export function sleep(ms: number): Promise<void> {
@@ -86,14 +86,15 @@ export async function getPdf(url: string): Promise<PdfFile> {
   };
 }
 
-export function createZip(pdfs: PdfFile[]): Promise<Blob> {
-  const zip = new JSZip();
+export async function createZip(pdfs: PdfFile[]): Promise<Blob> {
+  const zipFileWriter = new zip.BlobWriter();
+  const zipWriter = new zip.ZipWriter(zipFileWriter);
 
   pdfs.forEach((pdf) => {
-    zip.file(pdf.name, pdf.data);
+    zipWriter.add(pdf.name, new zip.BlobReader(pdf.data));
   });
 
-  return zip.generateAsync({ type: 'blob' });
+  return await zipWriter.close();
 }
 
 export async function withRetry<T>(fn: () => Promise<T>, retries = 3, retryOffset = 5000): Promise<T> {
