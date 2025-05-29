@@ -4,7 +4,6 @@ import {
   getCurrentMonth,
   getCurrentYear,
   padDate,
-  getNodeIndex,
   getVersionedMatch,
   runExternalScript,
   sleep,
@@ -26,8 +25,16 @@ export type Credentials = {
   windowId: string;
 };
 
-export function getDocumentRows(): Element[] {
-  return [...Array.from(document.querySelectorAll('tr[data-wt-click="dokument_download"]'))];
+type DocumentRow = {
+  element: Element,
+  rowIndex: number,
+}
+
+export function getDocumentRows(): DocumentRow[] {
+  return [...document.querySelectorAll('tr[onclick^="DocumentViewer.openPopupIfRequired"]')].map(((element, index) => ({
+    element,
+    rowIndex: index,
+  })));
 }
 
 export function getCredentials(): Promise<Credentials> {
@@ -84,10 +91,8 @@ export function getFormData() {
   return formData;
 }
 
-export async function getDocumentLink(formData: FormData, row: Element, options: { credentials: Credentials }) {
-  const index = getNodeIndex(row);
-
-  formData.set('documentArchiveListTable.selectedrowidx', String(index));
+export async function getDocumentLink(formData: FormData, row: DocumentRow, options: { credentials: Credentials }) {
+  formData.set('documentArchiveListTable.selectedrowidx', String(row.rowIndex));
 
   const res = await fetch('', {
     method: 'POST',
