@@ -28,11 +28,11 @@ Download [here](https://chrome.google.com/webstore/detail/flatex-downloader-comm
 
 ### Manual
 
-1. Download & unpack [extension.zip](https://github.com/purecopy/flatex-download-chrome-extension/releases/download/v1.0.2/extension.zip) from the latest release file.
+1. Download & unpack [extension.zip](https://github.com/purecopy/flatex-download-chrome-extension/releases/download/v2.1.1/extension.zip) from the latest release file.
 
 2. Install extension
    ```
-   Manage Extensions --> Activate "Developer Mode" --> Click "Load unpacked" --> select "build" folder
+   Manage Extensions --> Activate "Developer Mode" --> Click "Load unpacked" --> select unpacked "dist" folder
    ```
 
 ## Usage

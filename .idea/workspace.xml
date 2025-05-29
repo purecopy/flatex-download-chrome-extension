@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f9b053a5-fad4-41fd-a01a-aa57f90e3c81" name="Changes" comment="release 2.1.0">
+    <list default="true" id="f9b053a5-fad4-41fd-a01a-aa57f90e3c81" name="Changes" comment="docs: update readme">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,6 +24,9 @@
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 3
@@ -178,7 +180,23 @@
       <option name="project" value="LOCAL" />
       <updated>1731088106194</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="release 2.1.1">
+      <option name="closed" value="true" />
+      <created>1748555335864</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1748555335864</updated>
+    </task>
+    <task id="LOCAL-00012" summary="docs: update readme">
+      <option name="closed" value="true" />
+      <created>1748555559222</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1748555559222</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -202,6 +220,8 @@
     <MESSAGE value="fix: import casing" />
     <MESSAGE value="refactor: remove jszip in favor of zip.js for better compatibility with vite" />
     <MESSAGE value="release 2.1.0" />
-    <option name="LAST_COMMIT_MESSAGE" value="release 2.1.0" />
+    <MESSAGE value="release 2.1.1" />
+    <MESSAGE value="docs: update readme" />
+    <option name="LAST_COMMIT_MESSAGE" value="docs: update readme" />
   </component>
 </project>
