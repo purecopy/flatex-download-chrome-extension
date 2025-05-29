@@ -31,10 +31,6 @@ export function padDate(date: number): string {
   return String(date).padStart(2, '0');
 }
 
-export function getNodeIndex(child: Element): number {
-  return Array.prototype.indexOf.call(child.parentNode?.children || [], child);
-}
-
 export function getName(url: string): string {
   const lastTrailing = url.lastIndexOf('/');
   const name = url.slice(lastTrailing + 1);
