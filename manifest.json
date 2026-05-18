@@ -1,7 +1,7 @@
 {
   "name": "Flatex Downloader (Community Edition)",
   "description": "Einfacher Sammel-Downloader für deine Flatex Dokumente",
-  "version": "2.1.1",
+  "version": "3.0.0",
   "manifest_version": 3,
   "icons": {
     "16": "logo192.png",
