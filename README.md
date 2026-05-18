@@ -28,7 +28,7 @@ Download [here](https://chrome.google.com/webstore/detail/flatex-downloader-comm
 
 ### Manual
 
-1. Download & unpack [extension.zip](https://github.com/purecopy/flatex-download-chrome-extension/releases/download/v3.0.0/extension.zip) from the latest release file.
+1. Download & unpack [extension.zip](https://github.com/purecopy/flatex-download-chrome-extension/releases/download/v3.1.0/extension.zip) from the latest release file.
 
 2. Install extension
    ```
