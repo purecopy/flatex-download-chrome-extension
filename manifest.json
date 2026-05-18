@@ -1,6 +1,6 @@
 {
   "name": "Flatex Downloader (Community Edition)",
-  "description": "Simple Batch Downloader for your Flatex Documents",
+  "description": "Einfacher Sammel-Downloader für deine Flatex Dokumente",
   "version": "2.1.1",
   "manifest_version": 3,
   "icons": {
@@ -11,13 +11,21 @@
   },
   "action": {
     "default_popup": "index.html",
-    "default_title": "Open Flatex Downloader"
+    "default_title": "Flatex Downloader öffnen"
   },
-  "permissions": ["activeTab"],
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://konto.flatex.at/*", "https://konto.flatex.de/*"],
-      "js": ["./src/chrome/dom.ts"],
+      "matches": [
+        "https://konto.flatex.at/*",
+        "https://konto.flatex.de/*"
+      ],
+      "js": [
+        "./src/chrome/dom.ts"
+      ],
       "run_at": "document_end"
     }
   ]

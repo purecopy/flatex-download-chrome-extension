@@ -1,65 +1,63 @@
 import { useEffect, useState } from 'react';
-import { DOMMessage, DOMMessageResponse } from './types';
+import { DOMMessage, DocumentsCountResponse, DownloadState } from './types';
+import { getState, INITIAL_STATE, subscribe } from './lib/state';
 
 export function useDownload() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [state, setState] = useState<DownloadState>(INITIAL_STATE);
   const [count, setCount] = useState(0);
   const [tabId, setTabId] = useState(0);
 
-  async function downloadAll(): Promise<{ success: boolean; count?: number }> {
-    if (!tabId) {
-      throw Error('missing-tab-id');
-    }
-
-    setIsLoading(true);
-
-    return new Promise((res, rej) => {
-      chrome.tabs?.sendMessage(tabId, { type: 'POST_DOWNLOAD' } as DOMMessage, (response: DOMMessageResponse) => {
-        setIsLoading(false);
-
-        if ('success' in response && response.success === true) {
-          res(response);
-        } else {
-          if ('reason' in response && response.reason) {
-            rej(response.reason);
-          }
-
-          rej('Download failed');
-        }
-      });
-    });
+  function downloadAll() {
+    if (!tabId) return;
+    chrome.tabs?.sendMessage(tabId, { type: 'START_DOWNLOAD' } as DOMMessage);
   }
 
-  // get count
-  useEffect(() => {
-    if (!tabId) {
-      return;
-    }
+  function retryFailed() {
+    if (!tabId) return;
+    chrome.tabs?.sendMessage(tabId, { type: 'RETRY_FAILED' } as DOMMessage);
+  }
 
-    chrome.tabs?.sendMessage(tabId, { type: 'GET_DOCUMENTS' } as DOMMessage, (response: DOMMessageResponse) => {
-      if ('documents' in response) {
+  // get active tab id once
+  useEffect(() => {
+    chrome.tabs?.query({ active: true, currentWindow: true }, (tabs) => {
+      setTabId(tabs[0]?.id ?? 0);
+    });
+  }, []);
+
+  // hydrate state from storage + subscribe to changes
+  useEffect(() => {
+    let cancelled = false;
+    getState().then((current) => {
+      if (!cancelled) setState(current);
+    });
+
+    const unsubscribe = subscribe((next) => {
+      setState(next);
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+
+  // get document count from the page (only when not actively downloading)
+  useEffect(() => {
+    if (!tabId) return;
+    if (state.phase === 'running' || state.phase === 'zipping') return;
+
+    chrome.tabs?.sendMessage(tabId, { type: 'GET_DOCUMENTS' } as DOMMessage, (response: DocumentsCountResponse) => {
+      if (chrome.runtime.lastError) return;
+      if (response && 'documents' in response) {
         setCount(response.documents);
       }
     });
-  });
-
-  // get tab
-  useEffect(() => {
-    chrome.tabs?.query(
-      {
-        active: true,
-        currentWindow: true,
-      },
-      (tabs) => {
-        const tabId = tabs[0].id || 0;
-        setTabId(tabId);
-      },
-    );
-  });
+  }, [tabId, state.phase]);
 
   return {
+    state,
     count,
-    isLoading,
     downloadAll,
+    retryFailed,
   };
 }

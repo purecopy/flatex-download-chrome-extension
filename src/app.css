@@ -2,7 +2,7 @@
   text-align: center;
   height: 100%;
   background-color: #282c34;
-  min-width: 256px;
+  min-width: 360px;
 }
 
 .App-logo {
@@ -23,4 +23,43 @@
 
 .App-download-button {
   margin-block-end: 8px;
+}
+
+.App-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 360px;
+  font-size: 14px;
+}
+
+.App-summary {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.App-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.App-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: rgba(239, 83, 80, 0.12);
+  border: 1px solid rgba(239, 83, 80, 0.4);
+  border-radius: 4px;
+  color: #ef9a9a;
+  font-size: 13px;
+  max-width: 360px;
+}
+
+.App-error p {
+  margin: 0;
 }

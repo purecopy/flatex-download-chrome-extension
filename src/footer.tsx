@@ -7,13 +7,13 @@ export function Footer(): JSX.Element {
       href="https://paypal.me/heneis?country.x=AT&locale.x=de_DE"
       target="_blank"
       referrerPolicy="no-referrer"
-      title="Donation Link"
+      title="Spenden-Link"
       rel="noreferrer"
     >
-      Enjoying the Extension? <br />
-      Buy me some coffee :&#41;
+      Gefällt dir die Erweiterung? <br />
+      Spendier mir einen Kaffee :&#41;
       <br />
-      <span className="FooterClick">*click* ☕️</span>
+      <span className="FooterClick">*klick* ☕️</span>
     </a>
   );
 }

@@ -1,5 +1,6 @@
 import * as zip from '@zip.js/zip.js';
 import { PdfFile } from '../types';
+import { isRetryable as defaultIsRetryable } from './errors';
 
 export function sleep(ms: number): Promise<void> {
   return new Promise((res) => {
@@ -7,12 +8,10 @@ export function sleep(ms: number): Promise<void> {
   });
 }
 
-export async function asyncMapSerial<T, U>(arr: T[], fn: (item: T, index: number) => Promise<U>): Promise<U[]> {
-  return arr.reduce(async (res, cur, index) => {
-    const prev = await res;
-    const value = await fn(cur, index);
-    return [...prev, value];
-  }, Promise.resolve([] as U[]));
+export async function asyncForEachSerial<T>(arr: T[], fn: (item: T, index: number) => Promise<void>): Promise<void> {
+  for (let index = 0; index < arr.length; index++) {
+    await fn(arr[index], index);
+  }
 }
 
 export function getCurrentYear(): number {
@@ -42,9 +41,26 @@ export function getName(url: string): string {
   return name;
 }
 
-/**
- * Match input string with provided regex and return capture groups.
- */
+function sanitizeFilename(input: string): string {
+  return input
+    .replace(/[\/\\:*?"<>|\x00-\x1f]/g, '') // strip filesystem-forbidden chars
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 150);
+}
+
+export function getZipFileName(seq: number, displayName: string, url: string): string {
+  const prefix = String(seq).padStart(3, '0');
+  const safe = sanitizeFilename(displayName);
+
+  if (safe) {
+    return `${prefix} - ${safe}.pdf`;
+  }
+
+  const fallback = getName(url);
+  return `${prefix} - ${fallback}`;
+}
+
 export function getVersionedMatch(input: string, versionedPattern: Record<string, RegExp>): string[] | null {
   const patterns = Object.values(versionedPattern);
 
@@ -75,6 +91,13 @@ export async function getPdf(url: string): Promise<PdfFile> {
     throw res;
   }
 
+  const contentType = (res.headers.get('content-type') ?? '').toLowerCase();
+  if (!contentType.startsWith('application/pdf')) {
+    // myracloud sometimes serves the challenge page with HTTP 200; treat it like a 503
+    // so getPdfWithVerification kicks in and we don't zip HTML as *.pdf
+    throw new Response(await res.blob(), { status: 503, headers: res.headers });
+  }
+
   return {
     url,
     data: await res.blob(),
@@ -93,15 +116,55 @@ export async function createZip(pdfs: PdfFile[]): Promise<Blob> {
   return await zipWriter.close();
 }
 
-export async function withRetry<T>(fn: () => Promise<T>, retries = 3, retryOffset = 5000): Promise<T> {
-  try {
-    return await fn();
-  } catch (error) {
-    if (retries > 0) {
-      await sleep(retryOffset);
-      return await withRetry(fn, retries - 1);
-    }
+export type WithRetryOptions = {
+  retries?: number;
+  baseDelayMs?: number;
+  maxDelayMs?: number;
+  jitterRatio?: number;
+  isRetryable?: (err: unknown) => boolean;
+};
 
-    throw error;
+function retryAfterMs(error: unknown): number | null {
+  if (!(error instanceof Response)) return null;
+  const header = error.headers.get('retry-after');
+  if (!header) return null;
+  const seconds = Number(header);
+  if (Number.isFinite(seconds)) return seconds * 1000;
+  const date = Date.parse(header);
+  if (Number.isFinite(date)) return Math.max(0, date - Date.now());
+  return null;
+}
+
+export async function withRetry<T>(fn: () => Promise<T>, options: WithRetryOptions = {}): Promise<T> {
+  const {
+    retries = 5,
+    baseDelayMs = 5000,
+    maxDelayMs = 60000,
+    jitterRatio = 0.25,
+    isRetryable = defaultIsRetryable,
+  } = options;
+
+  let attempt = 0;
+
+  while (true) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt >= retries || !isRetryable(error)) {
+        throw error;
+      }
+
+      const exp = Math.min(baseDelayMs * 2 ** attempt, maxDelayMs);
+      const jitter = exp * jitterRatio * (Math.random() * 2 - 1);
+      const serverDelay = retryAfterMs(error) ?? 0;
+      const delay = Math.max(serverDelay, exp + jitter);
+
+      await sleep(delay);
+      attempt++;
+    }
   }
+}
+
+export function jitteredDelay(base: number, spread: number): number {
+  return base + Math.random() * spread;
 }

@@ -17,7 +17,7 @@ export function Button({
       disabled={disabled}
       {...rest}
     >
-      {loading ? <div className="ButtonLoadingLabel">Loading...</div> : null}
+      {loading ? <div className="ButtonLoadingLabel">Wird geladen …</div> : null}
       {children}
     </button>
   );

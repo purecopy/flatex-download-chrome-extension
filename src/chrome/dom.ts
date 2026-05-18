@@ -1,14 +1,20 @@
 import {
   Credentials,
+  DocumentRow,
   getCredentials,
   getDocumentLink,
   getDocumentRows,
   getFormData,
   verifyPdfLink,
 } from '../lib/flatex';
-import { asyncMapSerial, createZip, getPdf, withRetry } from '../lib/utils';
-import { DOMMessage, DOMMessageResponse } from '../types';
+import { asyncForEachSerial, createZip, getPdf, getZipFileName, jitteredDelay, sleep, withRetry } from '../lib/utils';
+import { DownloadError, toErrorCode } from '../lib/errors';
+import { bumpCounter, getState, INITIAL_STATE, replaceState, setState, updateItem } from '../lib/state';
+import type { DocumentItem, DOMMessage, DocumentsCountResponse, PdfFile } from '../types';
 import { saveAs } from 'file-saver';
+
+const INTER_ITEM_BASE_MS = 2500;
+const INTER_ITEM_SPREAD_MS = 3000;
 
 function getCredentialsWithCacheFn() {
   let credentials: Credentials | null = null;
@@ -25,7 +31,7 @@ function getCredentialsWithCacheFn() {
 
 const getCredentialsWithCache = getCredentialsWithCacheFn();
 
-async function getPdfWithVerification(docLink: string) {
+async function getPdfWithVerification(docLink: string): Promise<PdfFile> {
   try {
     return await getPdf(docLink);
   } catch (error) {
@@ -38,92 +44,152 @@ async function getPdfWithVerification(docLink: string) {
   }
 }
 
-function toggleLoader(show: boolean) {
-  const prevLoader = document.getElementById('flatex-downloader-loader');
+function buildItem(row: DocumentRow, seq: number): DocumentItem {
+  return {
+    rowIndex: row.rowIndex,
+    displayName: row.displayName,
+    fileName: getZipFileName(seq, row.displayName, ''),
+    status: 'pending',
+    attempts: 0,
+  };
+}
 
-  // create html element
-  if (show && !prevLoader) {
-    const loader = document.createElement('div');
-    loader.id = 'flatex-downloader-loader';
-    loader.style.position = 'fixed';
-    loader.style.bottom = '32px';
-    loader.style.left = '32px';
-    loader.style.backgroundColor = '#282c34';
-    loader.style.zIndex = '99999';
-    loader.style.padding = '12px 32px';
-    loader.style.color = '#90caf9';
+async function processItem(
+  row: DocumentRow,
+  item: DocumentItem,
+  formData: FormData,
+  credentials: Credentials,
+): Promise<PdfFile | null> {
+  try {
+    await updateItem(row.rowIndex, { status: 'fetching-link', attempts: item.attempts + 1, errorCode: undefined });
+    const link = await withRetry(() => getDocumentLink(formData, row, { credentials }));
 
-    const headline = document.createElement('div');
-    headline.innerText = 'Flatex Downloader (Community Edition)';
-    headline.style.fontSize = '12px';
-    headline.style.marginBottom = '6px';
+    await updateItem(row.rowIndex, { status: 'downloading' });
+    const pdf = await withRetry(() => getPdfWithVerification(link));
+    pdf.name = item.fileName;
 
-    const subHeadline = document.createElement('div');
-    subHeadline.innerText = 'Preparing Download...';
-    subHeadline.style.fontSize = '24px';
-    subHeadline.style.fontWeight = 'bold';
-
-    loader.appendChild(headline);
-    loader.appendChild(subHeadline);
-
-    document.body.appendChild(loader);
-  } else if (!show && prevLoader) {
-    prevLoader.remove();
+    await updateItem(row.rowIndex, { status: 'success' });
+    await bumpCounter('successCount');
+    return pdf;
+  } catch (err) {
+    const code = toErrorCode(err);
+    console.error('[flatex-downloader] item failed', { rowIndex: row.rowIndex, code, err });
+    await updateItem(row.rowIndex, { status: 'failed', errorCode: code });
+    await bumpCounter('failedCount');
+    return null;
   }
+}
+
+async function deliverZip(pdfs: PdfFile[], suffix = ''): Promise<void> {
+  if (pdfs.length === 0) return;
+
+  await setState({ phase: 'zipping' });
+  const blob = await createZip(pdfs);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  saveAs(blob, `flatex-downloader-${timestamp}${suffix}.zip`);
+}
+
+async function runDownload(rowsToProcess: DocumentRow[], items: DocumentItem[]): Promise<void> {
+  let credentials: Credentials;
+
+  try {
+    credentials = await getCredentialsWithCache();
+  } catch (err) {
+    const code = err instanceof DownloadError ? err.code : toErrorCode(err);
+    console.error('[flatex-downloader] credentials failed', err);
+    await setState({ phase: 'completed', finalError: code });
+    return;
+  }
+
+  const formData = getFormData();
+  const successes: PdfFile[] = [];
+
+  await asyncForEachSerial(rowsToProcess, async (row, index) => {
+    if (index > 0) {
+      // jittered pause so flatex doesn't rate-limit us after ~40 rapid requests
+      await sleep(jitteredDelay(INTER_ITEM_BASE_MS, INTER_ITEM_SPREAD_MS));
+    }
+    const item = items.find((i) => i.rowIndex === row.rowIndex);
+    if (!item) return;
+    const pdf = await processItem(row, item, formData, credentials);
+    if (pdf) successes.push(pdf);
+  });
+
+  await deliverZip(successes);
+  await setState({ phase: 'completed' });
+}
+
+async function handleStartDownload(): Promise<void> {
+  const rows = getDocumentRows();
+
+  if (rows.length === 0) {
+    await replaceState({ ...INITIAL_STATE, phase: 'completed', finalError: 'unknown' });
+    return;
+  }
+
+  const items = rows.map((row, seq) => buildItem(row, seq + 1));
+
+  await replaceState({
+    phase: 'running',
+    startedAt: Date.now(),
+    totalCount: items.length,
+    successCount: 0,
+    failedCount: 0,
+    items,
+  });
+
+  await runDownload(rows, items);
+}
+
+async function handleRetryFailed(): Promise<void> {
+  const current = await getState();
+  const failedIndices = new Set(current.items.filter((i) => i.status === 'failed').map((i) => i.rowIndex));
+
+  if (failedIndices.size === 0) return;
+
+  const allRows = getDocumentRows();
+  const rowsToProcess = allRows.filter((row) => failedIndices.has(row.rowIndex));
+
+  if (rowsToProcess.length === 0) {
+    // rows no longer present in the DOM (filters changed, page reloaded) — nothing to retry
+    return;
+  }
+
+  const resetItems = current.items.map((item) =>
+    failedIndices.has(item.rowIndex) ? { ...item, status: 'pending' as const, errorCode: undefined } : item,
+  );
+
+  await replaceState({
+    ...current,
+    phase: 'running',
+    failedCount: current.failedCount - failedIndices.size,
+    items: resetItems,
+    finalError: undefined,
+  });
+
+  await runDownload(rowsToProcess, resetItems);
 }
 
 const handleMessages = (
   msg: DOMMessage,
   _sender: chrome.runtime.MessageSender,
-  sendResponse: (response: DOMMessageResponse) => void,
+  sendResponse: (response: DocumentsCountResponse) => void,
 ) => {
-  let response: DOMMessageResponse | undefined = undefined;
-
   switch (msg.type) {
     case 'GET_DOCUMENTS':
-      response = {
-        documents: getDocumentRows().length,
-      };
-
-      break;
-    case 'POST_DOWNLOAD':
-      const rows = getDocumentRows();
-      const data = getFormData();
-      toggleLoader(true);
-
-      // TODO: Improve error handling
-      // - Display failed downloads
-      getCredentialsWithCache()
-        .then((credentials) =>
-          asyncMapSerial(rows, (row) =>
-            withRetry(() => getDocumentLink(data, row, { credentials })).then((docLink) =>
-              withRetry(() => getPdfWithVerification(docLink)),
-            ),
-          ),
-        )
-        .then((pdfs) => createZip(pdfs))
-        .then((blob) => saveAs(blob, `flatex-downloader-export.zip`))
-        .then((_links) => {
-          sendResponse({ success: true, count: rows.length });
-        })
-        .catch((error) => {
-          console.log(error);
-          sendResponse({ success: false, count: 0, reason: error.message });
-        })
-        .finally(() => {
-          toggleLoader(false);
-        });
-
-      // keep message channel open
-      return true;
-  }
-
-  if (response) {
-    sendResponse(response);
+      sendResponse({ documents: getDocumentRows().length });
+      return;
+    case 'START_DOWNLOAD':
+      handleStartDownload();
+      return;
+    case 'RETRY_FAILED':
+      handleRetryFailed();
+      return;
   }
 };
 
-/**
- * Fired when a message is sent from either an extension process or a content script.
- */
 chrome.runtime?.onMessage.addListener(handleMessages);
+
+// chrome.storage.local persists across browser restarts; a fresh content script load (new page,
+// reload, new tab) should start with a clean slate so the popup doesn't show last week's results.
+replaceState({ ...INITIAL_STATE });

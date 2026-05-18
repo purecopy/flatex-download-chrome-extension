@@ -1,0 +1,33 @@
+.ProgressBar {
+  width: 100%;
+}
+
+.ProgressBar-track {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ProgressBar-success {
+  background-color: #4caf50;
+  transition: width 200ms ease;
+}
+
+.ProgressBar-failed {
+  background-color: #ef5350;
+  transition: width 200ms ease;
+}
+
+.ProgressBar-label {
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+}
+
+.ProgressBar-failedLabel {
+  color: #ef5350;
+}

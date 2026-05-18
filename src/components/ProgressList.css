@@ -1,0 +1,72 @@
+.ProgressList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.15);
+  text-align: left;
+  scroll-behavior: smooth;
+}
+
+.ProgressList-item {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  gap: 8px;
+  align-items: baseline;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.ProgressList-item:last-child {
+  border-bottom: none;
+}
+
+.ProgressList-icon {
+  text-align: center;
+  font-weight: bold;
+}
+
+.ProgressList-name {
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ProgressList-status {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.ProgressList-item--success .ProgressList-icon {
+  color: #4caf50;
+}
+
+.ProgressList-item--failed .ProgressList-icon {
+  color: #ef5350;
+}
+
+.ProgressList-item--failed .ProgressList-status {
+  color: #ef9a9a;
+  white-space: normal;
+  font-size: 11px;
+}
+
+.ProgressList-item--failed {
+  grid-template-columns: 20px 1fr;
+}
+
+.ProgressList-item--failed .ProgressList-status {
+  grid-column: 1 / -1;
+  margin-left: 28px;
+}
+
+.ProgressList-item--fetching-link .ProgressList-icon,
+.ProgressList-item--downloading .ProgressList-icon {
+  color: #90caf9;
+}
