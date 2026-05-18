@@ -46,6 +46,13 @@
   gap: 8px;
 }
 
+.App-hint {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 320px;
+}
+
 .App-error {
   display: flex;
   flex-direction: column;

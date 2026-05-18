@@ -6,6 +6,8 @@ export type DOMMessage = { type: DOMMessageType };
 
 export type DocumentsCountResponse = { documents: number };
 
+export type PageStatus = 'unknown' | 'wrong-host' | 'no-response' | 'ready';
+
 export type ItemStatus = 'pending' | 'fetching-link' | 'downloading' | 'success' | 'failed';
 
 export type DocumentItem = {

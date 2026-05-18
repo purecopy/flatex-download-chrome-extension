@@ -7,10 +7,17 @@ import { ProgressBar } from './components/ProgressBar';
 import { ProgressList } from './components/ProgressList';
 import { errorMessage } from './lib/errors';
 
+const PAGE_STATUS_HINT: Record<'wrong-host' | 'no-response', string> = {
+  'wrong-host': 'Bitte öffne das Classic Dokumentenarchiv auf konto.flatex.at oder konto.flatex.de.',
+  'no-response':
+    'Die Seite kann nicht gelesen werden. Bitte lade sie neu und öffne anschließend das Dokumentenarchiv.',
+};
+
 function App() {
-  const { state, count, downloadAll, retryFailed } = useDownload();
+  const { state, count, pageStatus, downloadAll, retryFailed } = useDownload();
   const isRunning = state.phase === 'running' || state.phase === 'zipping';
   const showProgress = state.items.length > 0 && state.phase !== 'idle';
+  const canDownload = pageStatus === 'ready' && count > 0;
 
   return (
     <div className="App">
@@ -23,18 +30,26 @@ function App() {
               className="App-download-button"
               loading={isRunning}
               onClick={downloadAll}
-              disabled={count <= 0 || isRunning}
+              disabled={!canDownload || isRunning}
             >
               Herunterladen
             </Button>
-            <p>{count} Dokumente gefunden</p>
+            {pageStatus === 'ready' ? (
+              count > 0 ? (
+                <p>{count} Dokumente gefunden</p>
+              ) : (
+                <p className="App-hint">Keine Dokumente in der Tabelle – passe ggf. den Datumsfilter an.</p>
+              )
+            ) : pageStatus === 'unknown' ? null : (
+              <p className="App-hint">{PAGE_STATUS_HINT[pageStatus]}</p>
+            )}
           </>
         ) : null}
 
         {state.finalError ? (
           <div className="App-error">
             <p>{errorMessage(state.finalError)}</p>
-            <Button onClick={downloadAll} disabled={!count}>
+            <Button onClick={downloadAll} disabled={!canDownload}>
               Erneut versuchen
             </Button>
           </div>
